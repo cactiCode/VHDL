@@ -1,0 +1,85 @@
+-- T flip-flop øving 6 part 1
+
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+
+Entity Lab_6_counters IS
+		PORT (SW :IN std_logic_vector(1 downto 0);
+			LEDS : OUT std_logic_vector(7 downto 0));
+END Lab_6_counters;
+
+Architecture Tflipflop of Lab_6_counters IS
+
+	component TLatch
+		PORT(T,clock, clear  : IN std_logic;
+						Q    : OUT std_logic);
+	end component;
+
+	signal t_inn_sig : std_logic_vector(7 downto 0);
+	signal Q : std_logic_vector (7 downto 0);
+	signal clear,clock :std_logic;
+
+
+begin
+	--Setter innganger
+	clock <= SW(1);
+	t_inn_sig(0) <= SW(0);
+	
+	--Teller logikk
+	t_inn_sig(1) <= t_inn_sig(0) AND Q(0);
+	t_inn_sig(2) <= t_inn_sig(1) AND Q(1);
+	t_inn_sig(3) <= t_inn_sig(2) AND Q(2);
+	t_inn_sig(4) <= t_inn_sig(3) AND Q(3);
+	t_inn_sig(5) <= t_inn_sig(4) AND Q(4);
+	t_inn_sig(6) <= t_inn_sig(5) AND Q(5);
+	t_inn_sig(7) <= t_inn_sig(6) AND Q(6);
+	
+Tlat : TLatch port map(t_inn_sig(0), clock, clear, Q(0));
+Tlat1 : TLatch port map(t_inn_sig(1), clock, clear, Q(1));
+Tlat2 : TLatch port map(t_inn_sig(2), clock, clear, Q(2));
+Tlat3 : TLatch port map(t_inn_sig(3), clock, clear, Q(3));
+Tlat4 : TLatch port map(t_inn_sig(4), clock, clear, Q(4));
+Tlat5 : TLatch port map(t_inn_sig(5), clock, clear, Q(5));
+Tlat6 : TLatch port map(t_inn_sig(6), clock, clear, Q(6));
+Tlat7 : TLatch port map(t_inn_sig(7), clock, clear, Q(7));
+LEDS <= Q;
+
+
+end Tflipflop;
+
+
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+
+Entity TLatch IS
+	PORT(T,clock,clear : IN std_logic;
+				  Q    : OUT std_logic);
+END TLatch;
+
+Architecture TFF OF TLatch IS
+signal tmp : std_logic;
+signal tempT1,tempT2,tempT3,oT : std_logic;
+
+begin
+process (clock)
+
+begin
+tempT1 <= T;
+tempT2 <= tempT1;  -- forsøk på debouncing
+tempT3 <= tempT2;
+oT <= tempT3 and tempT2 and tempT1;
+
+if (rising_edge(clock)) then
+if oT = '0' then
+tmp <= tmp;
+elsif oT = '1' then
+tmp <= not(tmp);
+end if;
+end if;
+end process;
+Q <= tmp;
+end TFF;
+
+
+
+

@@ -1,0 +1,178 @@
+--Øving_6_part_5
+
+
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+USE ieee.std_logic_unsigned.all;
+
+Entity Lab_6_counters IS
+		PORT (		 SW : IN  std_logic_vector(1 downto 0);
+			input_clock : IN  std_logic;
+				   LEDS : OUT std_logic_vector(7 downto 0);
+				   HEX0,HEX1,HEX2,HEX3,HEX4,HEX5 : OUT std_logic_vector(6 downto 0));
+			
+END Lab_6_counters;
+
+Architecture Tflipflop of Lab_6_counters IS
+
+	component timer
+			PORT(clock : IN std_logic;
+				   sec : OUT std_logic);
+	end component;
+	
+	component segprint
+		PORT(counter :IN std_logic_vector(2 downto 0);
+		  disp0,disp1,disp2,disp3,disp4,disp5: OUT std_logic_vector(6 downto 0));
+	end component;
+	
+	component TLatch
+		PORT( clock : IN std_logic;
+		 counter : OUT std_logic_vector(2 downto 0));
+	end component;
+	
+	
+	signal clock :std_logic;
+	signal disp0,disp1,disp2,disp3,disp4,disp5:std_logic_vector(6 downto 0);
+	signal counter : std_logic_vector(2 downto 0);
+
+
+
+begin
+	
+	time_1 : timer port map(input_clock,clock);
+	latch 	: TLatch port map (clock, counter);
+	
+	LEDS(0) <= clock;
+	seg : segprint port map (counter,disp0,disp1,disp2,disp3,disp4,disp5);
+	HEX0 <= NOT Disp0;
+	HEX1 <= NOT Disp1;
+	HEX2 <= NOT Disp2;
+	HEX3 <= NOT Disp3;
+	HEX4 <= NOT Disp4;
+	HEX5 <= NOT Disp5;
+	
+end Tflipflop;
+
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+USE ieee.std_logic_unsigned.all;
+
+Entity TLatch IS
+	PORT(clock : IN std_logic;
+		 counter : OUT std_logic_vector(2 downto 0));
+END entity;
+
+Architecture TFF OF TLatch IS
+signal teller :std_logic_vector( 2 downto 0);
+
+begin
+process (clock)
+begin
+if (clock = '1') then
+	if teller < 5  then
+	 teller <= teller + '1';
+	elsif teller = 5 then
+	 teller <= "000";
+	end if;
+end if;
+end process;
+counter <= teller;
+end TFF;
+
+
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+USE ieee.std_logic_unsigned.all;
+
+Entity timer is
+	PORT(clock : IN std_logic;
+		sec : OUT std_logic);
+END Entity;
+
+Architecture times of timer is
+constant limit :integer := 50000000;
+signal r_count :integer range 0 to limit := 0;
+signal state : std_logic := '0';
+begin
+process(clock) is
+begin
+	if rising_edge(clock) then
+		if (r_count < limit) then
+			r_count <= r_count +1; -- Ikke ferdig med å telle enda!
+			state <= '0';
+		elsif r_count = limit then
+			state <= '1'; -- setter nå state til ok ferdig med å telle!
+			r_count <= 0;
+		else
+			r_count <= 0;
+		end if;
+	end if;
+end process;
+sec <= state;
+end times;
+
+
+
+
+
+-- #### 4 bit HEX to 7 seg process ####
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+USE ieee.std_logic_unsigned.all;
+
+Entity segprint is
+	PORT( counter :IN std_logic_vector(2 downto 0);
+		  disp0,disp1,disp2,disp3,disp4,disp5: OUT std_logic_vector(6 downto 0));
+end segprint;
+
+ARCHITECTURE segprint_Arch of segprint is
+begin
+
+process(counter)
+begin
+case counter IS
+	when "000" => disp0 <= "0111111";
+					  disp1 <= "0000110";
+					  disp2 <= "1111001";		
+					  disp3 <= "1011110";
+					  disp4 <= "0000000";
+					  disp5 <= "0000000";
+					 
+	when "001" => disp0 <= "0000000";
+					  disp1 <= "0111111";
+					  disp2 <= "0000110";
+					  disp3 <= "1111001";		
+					  disp4 <= "1011110";
+					  disp5 <= "0000000";
+					  
+	when "010" => disp0 <= "0000000";
+					  disp1 <= "0000000";
+					  disp2 <= "0111111";
+					  disp3 <= "0000110";
+					  disp4 <= "1111001";		
+					  disp5 <= "1011110";
+					  
+	when "011" => disp0 <= "1011110";
+					  disp1 <= "0000000";
+					  disp2 <= "0000000";
+					  disp3 <= "0111111";
+					  disp4 <= "0000110";
+					  disp5 <= "1111001";		
+					  
+	when "100" => disp0 <= "1111001";
+					  disp1 <= "1011110";
+					  disp2 <= "0000000";
+					  disp3 <= "0000000";
+					  disp4 <= "0111111";
+					  disp5 <= "0000110";
+					  
+	when "101" => disp0 <= "0000110";
+					  disp1 <= "1111001";
+					  disp2 <= "1011110";
+					  disp3 <= "0000000";
+					  disp4 <= "0000000";
+					  disp5 <= "0111111";
+	when others => NULL;
+end case;
+end process;
+end segprint_Arch;

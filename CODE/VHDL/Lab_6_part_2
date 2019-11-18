@@ -1,0 +1,143 @@
+-- T flip-flop øving 6 part 2
+
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+USE ieee.std_logic_unsigned.all;
+
+Entity Lab_6_counters IS
+		PORT (SW :IN std_logic_vector(1 downto 0);
+			input_clock :IN std_logic;
+			LEDS : OUT std_logic_vector(7 downto 0);
+			HEX0,HEX1,HEX2,HEX3 : OUT std_logic_vector(6 downto 0));
+			
+END Lab_6_counters;
+
+Architecture Tflipflop of Lab_6_counters IS
+	
+	component segprint
+		PORT(seg_input		: IN std_logic_vector(3 downto 0);
+		     seg_output	: OUT std_logic_vector(6 downto 0));
+	END component;
+	
+	component debounce
+		PORT(  deb_inn : in std_logic;
+			inpt_clock : in std_logic;
+				deb_out: out std_logic);
+	end component;
+		
+	signal Q : std_logic_vector (15 downto 0);
+	signal T, clock, clock_deb : std_logic;
+	signal seg1,seg2,seg3,seg4 : std_logic_vector(3 downto 0);
+	signal disp0,disp1,disp2,disp3 : std_logic_vector(6 downto 0);
+	
+begin
+	--kobler bryter mot debounce og outputter T:
+	debouncing : debounce port map ( SW(0),input_clock,clock_deb);
+	T <= SW(1);
+	clock <= clock_deb;
+	process(clock) is
+	begin
+	if (clock = '1') then
+		if T = '0' then
+			Q<= Q;
+		elsif T = '1' then
+			Q <= Q + 1;
+		end if;
+	end if;
+	end process;
+	--LEDS <= Q;
+	
+	seg1<=Q(3 downto 0);
+	seg2<=Q(7 downto 4);
+	seg3<=Q(11 downto 8);
+	seg4<=Q(15 downto 12);
+	
+	segment1 : segprint port map (seg1,disp0);
+	segment2 : segprint port map (seg2,disp1);
+	segment3 : segprint port map (seg3,disp2);
+	segment4 : segprint port map (seg4,disp3);
+	
+	
+	HEX0 <= NOT Disp0;
+	HEX1 <= NOT Disp1;
+	HEX2 <= NOT Disp2;
+	HEX3 <= NOT Disp3;
+	
+	
+	
+	
+end Tflipflop;
+
+--#### Debounce Code ####
+
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+USE ieee.std_logic_unsigned.all;
+Entity debounce IS
+	PORT(deb_inn : in std_logic;
+		inpt_clock : in std_logic;
+		  deb_out: out std_logic);
+end debounce;
+
+ARCHITECTURE deb of debounce is
+constant limit :integer := 250000;
+signal r_count :integer range 0 to limit := 0;
+signal state : std_logic := '0';
+begin
+
+	Debouncepros : process(inpt_clock) is
+		begin
+			if rising_edge(inpt_clock) then
+				if (deb_inn /= state and r_count < limit) then
+					r_count <= r_count +1; -- Ikke ferdig med debouncing enda!
+				elsif r_count = limit then
+				state <= deb_inn; -- setter nå state til ok ferdig med debounce !
+				r_count <= 0;
+				else
+				r_count <= 0;
+				end if;
+			end if;
+	end process Debouncepros;
+	deb_out <= state;	
+end architecture deb;
+
+
+
+-- #### 4 bit HEX to 7 seg process ####
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+
+Entity segprint is
+	PORT(seg_input: IN std_logic_vector(3 downto 0);
+		  seg_output: OUT std_logic_vector(6 downto 0));
+end segprint;
+
+ARCHITECTURE segprint_Arch of segprint is
+Signal seg7 : std_logic_vector(6 downto 0);
+begin
+
+process(seg_input)
+begin
+case seg_input IS
+	when "0000" => seg7 <= "0111111";
+	when "0001" => seg7 <= "0000110";
+	when "0010" => seg7 <= "1011011"; 
+	when "0011" => seg7 <= "1001111"; 
+	when "0100" => seg7 <= "1100110"; 
+	when "0101" => seg7 <= "1101101"; 
+	when "0110" => seg7 <= "1111101"; 
+	when "0111" => seg7 <= "0000111"; 
+	when "1000" => seg7 <= "1111111"; 
+	when "1001" => seg7 <= "1101111"; 
+	when "1010" => seg7 <= "1110111"; 
+	when "1011" => seg7 <= "1111100"; 
+	when "1100" => seg7 <= "0111001"; 
+	when "1101" => seg7 <= "1011110"; 
+	when "1110" => seg7 <= "1111001"; 
+	when "1111" => seg7 <= "1110001"; 
+	when others => NULL;
+end case;
+end process;
+seg_output <= seg7;
+end segprint_Arch;
+
