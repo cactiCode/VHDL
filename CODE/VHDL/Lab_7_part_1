@@ -1,0 +1,68 @@
+LIBRARY ieee;
+use ieee.std_logic_1164.all;
+ 
+ENTITY LAB_7_clocks IS
+    PORT ( clock_but,reset_but :IN std_logic;
+				LEDS :OUT std_logic_vector( 7 downto 0));
+END ENTITY;
+ 
+ARCHITECTURE Teller OF LAB_7_clocks IS
+	component counter
+		GENERIC (   n : NATURAL := 8;
+            K : NATURAL := 20);
+           
+		PORT (  clock   : IN STD_LOGIC;
+        reset_n : IN STD_LOGIC;
+        Q       : OUT STD_LOGIC_VECTOR(n-1 DOWNTO 0);
+        rollover: OUT std_LOGIC);
+	END component;		
+
+ signal clock, reset_n : std_logic;
+ signal Q : std_logic_vector(7 downto 0);
+ 
+BEGIN
+ clock <= clock_but;
+ reset_n <= reset_but;
+ LEDS <= Q;
+ 
+eight_bit: counter GENERIC MAP( n => 8 )PORT MAP(clock, reset_n, Q);
+
+END Architecture Teller;
+
+
+
+LIBRARY ieee;
+USE ieee.std_logic_1164.all;
+USE ieee.std_logic_unsigned.all;
+ 
+ENTITY counter IS
+GENERIC (   n : NATURAL := 8;
+            K : NATURAL := 20);
+           
+PORT (  clock   : IN STD_LOGIC;
+        reset_n : IN STD_LOGIC;
+        Q       : OUT STD_LOGIC_VECTOR(n-1 DOWNTO 0);
+        rollover: OUT std_LOGIC);
+       
+END ENTITY;
+ 
+ARCHITECTURE Behavior OF counter IS
+SIGNAL values : STD_LOGIC_VECTOR(n-1 DOWNTO 0);
+BEGIN
+
+PROCESS (clock, reset_n)
+BEGIN
+IF (reset_n = '1')THEN
+values <= (OTHERS => '0');
+
+ELSIF ((clock'EVENT) AND (clock = '1' )) THEN
+    IF (values = k) THEN
+    values <=(OTHERS => '0');
+    rollover <= '1';
+    else
+    values <= values + 1;
+    end if;
+END IF;
+END PROCESS;
+Q<= values;
+END Behavior;
